@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  DEVELOPER
+  TESTER
+  PENTESTER
+  VIEWER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String? // null for GitHub-only accounts
+  name         String
+  initials     String
+  color        String   @default("bg-emerald-500")
+  githubId     String?  @unique
+  githubLogin  String?
+  createdAt    DateTime @default(now())
+
+  memberships OrgMember[]
+  tasks       Task[]
+  messages    Message[]
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  members OrgMember[]
+}
+
+model OrgMember {
+  id     String       @id @default(uuid())
+  org    Organization @relation(fields: [orgId], references: [id])
+  orgId  String
+  user   User         @relation(fields: [userId], references: [id])
+  userId String
+  role   Role         @default(DEVELOPER)
+
+  joinedAt DateTime @default(now())
+
+  @@unique([orgId, userId])
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  title       String
+  description String   @default("")
+  status      String   @default("todo") // todo | in_progress | review | done
+  points      Int      @default(1)
+  assignee    User?    @relation(fields: [assigneeId], references: [id])
+  assigneeId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Channel {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  messages  Message[]
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  text      String
+  channel   Channel  @relation(fields: [channelId], references: [id])
+  channelId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+}
