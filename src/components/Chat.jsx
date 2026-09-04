@@ -3,8 +3,10 @@ import { Send, Hash } from "lucide-react";
 import Header from "./Header";
 import { api } from "../api";
 import { socket } from "../socket";
+import { useOrg } from "../context/OrgContext";
 
 export default function Chat() {
+  const { activeOrgId } = useOrg();
   const [channels, setChannels] = useState([]);
   const [activeChannel, setActiveChannel] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -12,17 +14,20 @@ export default function Chat() {
   const [error, setError] = useState(null);
   const bottomRef = useRef(null);
 
-  // Load channels once
+  // Reload channels whenever the active org changes.
   useEffect(() => {
+    if (!activeOrgId) return;
+    setActiveChannel(null);
+    setMessages([]);
     api
       .getChannels()
       .then((channelsRes) => {
         setChannels(channelsRes);
-        const deployments = channelsRes.find((c) => c.name === "deployments") || channelsRes[0];
-        setActiveChannel(deployments || null);
+        const general = channelsRes.find((c) => c.name === "general") || channelsRes[0];
+        setActiveChannel(general || null);
       })
       .catch((e) => setError(e.message));
-  }, []);
+  }, [activeOrgId]);
 
   // Load messages + join room whenever active channel changes
   useEffect(() => {

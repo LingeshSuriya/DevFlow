@@ -38,7 +38,9 @@ model Organization {
   slug      String   @unique
   createdAt DateTime @default(now())
 
-  members OrgMember[]
+  members  OrgMember[]
+  tasks    Task[]
+  channels Channel[]
 }
 
 model OrgMember {
@@ -56,6 +58,8 @@ model OrgMember {
 
 model Task {
   id          String   @id @default(uuid())
+  org         Organization @relation(fields: [orgId], references: [id])
+  orgId       String
   title       String
   description String   @default("")
   status      String   @default("todo") // todo | in_progress | review | done
@@ -67,10 +71,14 @@ model Task {
 }
 
 model Channel {
-  id        String    @id @default(uuid())
-  name      String    @unique
-  createdAt DateTime  @default(now())
+  id        String       @id @default(uuid())
+  org       Organization @relation(fields: [orgId], references: [id])
+  orgId     String
+  name      String
+  createdAt DateTime     @default(now())
   messages  Message[]
+
+  @@unique([orgId, name])
 }
 
 model Message {

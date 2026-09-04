@@ -13,3 +13,11 @@ export function connectSocket(token) {
 export function disconnectSocket() {
   socket.disconnect();
 }
+
+export function joinOrgRoom(orgId) {
+  if (orgId) socket.emit("org:join", orgId);
+}
+
+export function leaveOrgRoom(orgId) {
+  if (orgId) socket.emit("org:leave", orgId);
+}

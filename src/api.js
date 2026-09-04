@@ -1,23 +1,30 @@
 const BASE_URL = "http://localhost:5000/api";
 
 let getToken = () => null;
+let getOrgId = () => null;
+
 export function setTokenGetter(fn) {
   getToken = fn;
+}
+export function setOrgIdGetter(fn) {
+  getOrgId = fn;
 }
 
 async function request(path, options = {}) {
   const token = getToken();
+  const orgId = getOrgId();
+
   let res;
   try {
     res = await fetch(`${BASE_URL}${path}`, {
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(orgId ? { "X-Org-Id": orgId } : {}),
       },
       ...options,
     });
   } catch (networkErr) {
-    // fetch() itself throws on connection failure — this is NOT a 4xx/5xx from the server.
     throw new Error(
       `Can't reach the API at ${BASE_URL}. Is the backend running? (npm run dev inside /server)`
     );
@@ -36,6 +43,11 @@ export const api = {
   login: (data) => request("/auth/login", { method: "POST", body: JSON.stringify(data) }),
   me: () => request("/auth/me"),
   githubLoginUrl: () => `${BASE_URL}/auth/github`,
+
+  getOrgs: () => request("/orgs"),
+  createOrg: (data) => request("/orgs", { method: "POST", body: JSON.stringify(data) }),
+  getOrgMembers: (orgId) => request(`/orgs/${orgId}/members`),
+  inviteMember: (orgId, data) => request(`/orgs/${orgId}/invite`, { method: "POST", body: JSON.stringify(data) }),
 
   getUsers: () => request("/users"),
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Columns3, GitPullRequest, Bug, Circle } from "lucide-react";
 import Header from "./Header";
 import { api } from "../api";
+import { useOrg } from "../context/OrgContext";
 
 // PRs / bugs / activity feed have no backend module yet (out of trimmed scope) — static for now.
 const staticStats = [
@@ -17,10 +18,13 @@ const activity = [
 ];
 
 export default function Dashboard() {
+  const { activeOrg, activeOrgId } = useOrg();
   const [openTasks, setOpenTasks] = useState(null);
 
   useEffect(() => {
+    if (!activeOrgId) return;
     let cancelled = false;
+    setOpenTasks(null);
     api
       .getTasks()
       .then((tasks) => !cancelled && setOpenTasks(tasks.filter((t) => t.status !== "done").length))
@@ -28,7 +32,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [activeOrgId]);
 
   const stats = [
     { label: "Open tasks", value: openTasks ?? "…", icon: Columns3 },
@@ -37,7 +41,7 @@ export default function Dashboard() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <Header title="Dashboard" subtitle="devflow-team / core-platform" />
+      <Header title="Dashboard" subtitle={activeOrg?.name || "Loading..."} />
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-3 gap-4">
           {stats.map((s) => {

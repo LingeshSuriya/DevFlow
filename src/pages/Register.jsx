@@ -11,6 +11,7 @@ export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [orgName, setOrgName] = useState("");
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -19,7 +20,7 @@ export default function Register() {
     setError(null);
     setSubmitting(true);
     try {
-      await register(email, password, name);
+      await register(email, password, name, orgName);
       navigate("/dashboard");
     } catch (e) {
       setError(e.message);
@@ -29,14 +30,16 @@ export default function Register() {
   }
 
   return (
-    <AuthShell title="Create account" subtitle="devflow-team">
+    <AuthShell title="Create account" subtitle="new organization">
       <form onSubmit={handleSubmit} className="space-y-3">
         {error && <ErrorBanner text={error} />}
         <Field label="Full name" value={name} onChange={setName} />
         <Field label="Email" value={email} onChange={setEmail} type="email" />
         <Field label="Password" value={password} onChange={setPassword} type="password" />
+        <Field label="Organization name" value={orgName} onChange={setOrgName} />
         <p className="text-[11px] text-zinc-600">
-          New accounts join as <span className="text-emerald-400">Developer</span>. An admin can change your role later.
+          You become <span className="text-emerald-400">Owner</span> of this new org. You can join
+          other orgs later if someone invites you by email.
         </p>
         <button
           type="submit"
@@ -59,6 +62,9 @@ export default function Register() {
       >
         <Github size={16} /> Continue with GitHub
       </a>
+      <p className="text-[11px] text-zinc-600 text-center mt-2">
+        GitHub signups also get their own new org automatically.
+      </p>
 
       <p className="text-xs text-zinc-500 text-center mt-4">
         Already have an account? <Link to="/login" className="text-emerald-400 hover:underline">Sign in</Link>

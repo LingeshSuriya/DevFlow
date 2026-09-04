@@ -6,6 +6,7 @@ import ProtectedLayout from "./components/ProtectedLayout";
 import Dashboard from "./components/Dashboard";
 import Board from "./components/Board";
 import Chat from "./components/Chat";
+import OrgSettings from "./components/OrgSettings";
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/board" element={<Board />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/org" element={<OrgSettings />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

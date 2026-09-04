@@ -7,9 +7,11 @@ import { roleMeta } from "../data/roles";
 import { api } from "../api";
 import { socket } from "../socket";
 import { useAuth } from "../context/AuthContext";
+import { useOrg } from "../context/OrgContext";
 
 export default function Board() {
   const { user } = useAuth();
+  const { activeOrgId, activeOrg } = useOrg();
   const [tasks, setTasks] = useState([]);
   const [users, setUsers] = useState([]);
   const [draftTitle, setDraftTitle] = useState("");
@@ -24,8 +26,12 @@ export default function Board() {
     });
   }, []);
 
+  // Re-fetch whenever the active org changes (X-Org-Id header follows automatically).
   useEffect(() => {
+    if (!activeOrgId) return;
     let cancelled = false;
+    setLoading(true);
+    setTasks([]);
     Promise.all([api.getTasks(), api.getUsers()])
       .then(([tasksRes, usersRes]) => {
         if (cancelled) return;
@@ -35,14 +41,23 @@ export default function Board() {
       .catch((e) => !cancelled && setError(e.message))
       .finally(() => !cancelled && setLoading(false));
 
-    socket.on("task:created", upsertTask);
-    socket.on("task:moved", upsertTask);
     return () => {
       cancelled = true;
-      socket.off("task:created", upsertTask);
-      socket.off("task:moved", upsertTask);
     };
-  }, [upsertTask]);
+  }, [activeOrgId]);
+
+  // Only apply live updates that belong to the org currently on screen.
+  useEffect(() => {
+    const onTaskEvent = (task) => {
+      if (task.orgId === activeOrgId) upsertTask(task);
+    };
+    socket.on("task:created", onTaskEvent);
+    socket.on("task:moved", onTaskEvent);
+    return () => {
+      socket.off("task:created", onTaskEvent);
+      socket.off("task:moved", onTaskEvent);
+    };
+  }, [activeOrgId, upsertTask]);
 
   async function moveTask(id, direction) {
     const task = tasks.find((t) => t.id === id);
@@ -76,7 +91,7 @@ export default function Board() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <Header title="Board" subtitle="Sprint 4 — Aug 18 to Aug 31" />
+      <Header title="Board" subtitle={activeOrg ? `${activeOrg.name} — Sprint 4` : "Loading..."} />
       <div className="p-6">
         {error && (
           <div className="mb-4 text-xs text-red-400 bg-red-950/40 border border-red-900 rounded-md px-3 py-2">
