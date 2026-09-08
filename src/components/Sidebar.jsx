@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { LayoutGrid, Columns3, MessageSquare, LogOut, ChevronsUpDown, Check, Building2 } from "lucide-react";
+import {
+  LayoutGrid,
+  Columns3,
+  MessageSquare,
+  LogOut,
+  ChevronsUpDown,
+  Check,
+  Building2,
+  Bug,
+  GitPullRequest,
+} from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useOrg } from "../context/OrgContext";
@@ -8,6 +18,8 @@ import { roleMeta } from "../data/roles";
 const NAV_ITEMS = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutGrid },
   { to: "/board", label: "Board", icon: Columns3 },
+  { to: "/bugs", label: "Bugs", icon: Bug },
+  { to: "/reviews", label: "Reviews", icon: GitPullRequest },
   { to: "/chat", label: "Chat", icon: MessageSquare },
   { to: "/org", label: "Organization", icon: Building2 },
 ];
@@ -25,7 +37,6 @@ export default function Sidebar() {
         <span className="ml-1 h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
       </div>
 
-      {/* Org switcher */}
       <div className="relative px-2 pt-3">
         <button
           onClick={() => setSwitcherOpen((v) => !v)}
@@ -70,9 +81,7 @@ export default function Sidebar() {
               to={n.to}
               className={({ isActive }) =>
                 `w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
-                  isActive
-                    ? "bg-zinc-800 text-zinc-50"
-                    : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+                  isActive ? "bg-zinc-800 text-zinc-50" : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
                 }`
               }
             >
@@ -85,9 +94,7 @@ export default function Sidebar() {
 
       <div className="p-3 border-t border-zinc-800">
         <div className="flex items-center gap-2">
-          <div
-            className={`h-7 w-7 rounded-full ${user?.color || "bg-zinc-600"} flex items-center justify-center text-[11px] font-mono text-zinc-950 shrink-0`}
-          >
+          <div className={`h-7 w-7 rounded-full ${user?.color || "bg-zinc-600"} flex items-center justify-center text-[11px] font-mono text-zinc-950 shrink-0`}>
             {user?.initials || "?"}
           </div>
           <div className="text-xs min-w-0 flex-1">

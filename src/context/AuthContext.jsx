@@ -10,7 +10,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Let api.js read the current token without a circular import.
   useEffect(() => {
     setTokenGetter(() => token);
   }, [token]);
@@ -30,7 +29,6 @@ export function AuthProvider({ children }) {
         connectSocket(token);
       })
       .catch(() => {
-        // token expired/invalid
         localStorage.removeItem(STORAGE_KEY);
         setToken(null);
         setUser(null);

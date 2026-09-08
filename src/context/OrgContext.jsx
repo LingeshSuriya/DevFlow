@@ -22,7 +22,6 @@ export function OrgProvider({ children }) {
     return list;
   }, []);
 
-  // Whenever we (re)log in, load orgs and pick a sane active one.
   useEffect(() => {
     if (!user) {
       setOrgs([]);
@@ -42,7 +41,6 @@ export function OrgProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Join/leave the socket room whenever the active org changes.
   useEffect(() => {
     if (!activeOrgId) return;
     joinOrgRoom(activeOrgId);

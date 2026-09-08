@@ -10,7 +10,6 @@ function slugify(name) {
   return `${base || "org"}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-// GET /api/orgs — every org the current user belongs to, with their role in each
 router.get("/", async (req, res) => {
   const memberships = await prisma.orgMember.findMany({
     where: { userId: req.user.id },
@@ -20,7 +19,6 @@ router.get("/", async (req, res) => {
   res.json(memberships.map((m) => ({ id: m.org.id, name: m.org.name, slug: m.org.slug, role: m.role })));
 });
 
-// POST /api/orgs  { name }  — creates a new org, caller becomes Owner
 router.post("/", async (req, res) => {
   const { name } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "Organization name required" });
@@ -37,7 +35,6 @@ router.post("/", async (req, res) => {
   res.status(201).json({ id: org.id, name: org.name, slug: org.slug, role: "OWNER" });
 });
 
-// GET /api/orgs/:id/members — everyone in that org, with role (requester must be a member)
 router.get("/:id/members", async (req, res) => {
   const { id } = req.params;
   const membership = req.user.memberships.find((m) => m.orgId === id);
@@ -49,19 +46,12 @@ router.get("/:id/members", async (req, res) => {
     orderBy: { user: { name: "asc" } },
   });
 
-  res.json(
-    members.map((m) => ({
-      id: m.user.id,
-      name: m.user.name,
-      email: m.user.email,
-      initials: m.user.initials,
-      color: m.user.color,
-      role: m.role,
-    }))
-  );
+  res.json(members.map((m) => ({
+    id: m.user.id, name: m.user.name, email: m.user.email,
+    initials: m.user.initials, color: m.user.color, role: m.role,
+  })));
 });
 
-// POST /api/orgs/:id/invite  { email, role }  — Owner/Admin only, target must already have an account
 router.post("/:id/invite", async (req, res) => {
   const { id } = req.params;
   const { email, role } = req.body;
@@ -73,13 +63,9 @@ router.post("/:id/invite", async (req, res) => {
   if (!email) return res.status(400).json({ error: "email required" });
 
   const target = await prisma.user.findUnique({ where: { email } });
-  if (!target) {
-    return res.status(404).json({ error: "No account with that email yet — they need to sign up first" });
-  }
+  if (!target) return res.status(404).json({ error: "No account with that email yet — they need to sign up first" });
 
-  const existing = await prisma.orgMember.findUnique({
-    where: { orgId_userId: { orgId: id, userId: target.id } },
-  });
+  const existing = await prisma.orgMember.findUnique({ where: { orgId_userId: { orgId: id, userId: target.id } } });
   if (existing) return res.status(409).json({ error: "Already a member of this organization" });
 
   const validRoles = ["ADMIN", "DEVELOPER", "TESTER", "PENTESTER", "VIEWER"];
@@ -91,12 +77,8 @@ router.post("/:id/invite", async (req, res) => {
   });
 
   res.status(201).json({
-    id: member.user.id,
-    name: member.user.name,
-    email: member.user.email,
-    initials: member.user.initials,
-    color: member.user.color,
-    role: member.role,
+    id: member.user.id, name: member.user.name, email: member.user.email,
+    initials: member.user.initials, color: member.user.color, role: member.role,
   });
 });
 

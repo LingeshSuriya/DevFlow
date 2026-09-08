@@ -14,7 +14,6 @@ export default function Chat() {
   const [error, setError] = useState(null);
   const bottomRef = useRef(null);
 
-  // Reload channels whenever the active org changes.
   useEffect(() => {
     if (!activeOrgId) return;
     setActiveChannel(null);
@@ -29,7 +28,6 @@ export default function Chat() {
       .catch((e) => setError(e.message));
   }, [activeOrgId]);
 
-  // Load messages + join room whenever active channel changes
   useEffect(() => {
     if (!activeChannel) return;
     api.getMessages(activeChannel.id).then(setMessages).catch((e) => setError(e.message));
@@ -55,7 +53,6 @@ export default function Chat() {
     if (!text || !activeChannel) return;
     setDraft("");
     try {
-      // server broadcasts back via socket, including to us — no local append needed
       await api.sendMessage(activeChannel.id, { text });
     } catch (e) {
       setError(e.message);
@@ -70,43 +67,25 @@ export default function Chat() {
       <div className="flex-1 flex min-h-0">
         <div className="w-44 border-r border-zinc-800 py-3 px-2 shrink-0">
           {channels.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => setActiveChannel(c)}
-              className={`w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-sm text-left ${
-                c.id === activeChannel.id ? "bg-zinc-800 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
-              }`}
-            >
+            <button key={c.id} onClick={() => setActiveChannel(c)}
+              className={`w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-sm text-left ${c.id === activeChannel.id ? "bg-zinc-800 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"}`}>
               <Hash size={13} /> {c.name}
             </button>
           ))}
         </div>
 
         <div className="flex-1 flex flex-col min-w-0">
-          {error && (
-            <div className="m-3 text-xs text-red-400 bg-red-950/40 border border-red-900 rounded-md px-3 py-2">
-              {error}
-            </div>
-          )}
+          {error && <div className="m-3 text-xs text-red-400 bg-red-950/40 border border-red-900 rounded-md px-3 py-2">{error}</div>}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages.map((m) => (
-              <MessageRow key={m.id} message={m} />
-            ))}
+            {messages.map((m) => <MessageRow key={m.id} message={m} />)}
             <div ref={bottomRef} />
           </div>
 
           <div className="p-3 border-t border-zinc-800 flex items-center gap-2">
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
+            <input value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
               placeholder={`Message #${activeChannel.name}`}
-              className="flex-1 bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            />
-            <button
-              onClick={send}
-              className="h-9 w-9 flex items-center justify-center bg-emerald-500 hover:bg-emerald-400 rounded-md text-zinc-950 transition-colors"
-            >
+              className="flex-1 bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+            <button onClick={send} className="h-9 w-9 flex items-center justify-center bg-emerald-500 hover:bg-emerald-400 rounded-md text-zinc-950 transition-colors">
               <Send size={15} />
             </button>
           </div>
@@ -123,11 +102,7 @@ function MessageRow({ message }) {
 
   return (
     <div className="flex items-start gap-2.5">
-      <div
-        className={`h-7 w-7 rounded-full ${color} flex items-center justify-center text-[10px] font-mono text-zinc-950 shrink-0`}
-      >
-        {initials}
-      </div>
+      <div className={`h-7 w-7 rounded-full ${color} flex items-center justify-center text-[10px] font-mono text-zinc-950 shrink-0`}>{initials}</div>
       <div className="min-w-0">
         <div className="flex items-baseline gap-2">
           <span className="text-sm text-zinc-200 font-medium">{message.user?.name}</span>

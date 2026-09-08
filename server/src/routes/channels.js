@@ -7,16 +7,11 @@ export default function channelRoutes(io) {
   const router = Router();
   router.use(requireAuth, requireOrg);
 
-  // GET /api/channels — only this org's channels
   router.get("/", async (req, res) => {
-    const channels = await prisma.channel.findMany({
-      where: { orgId: req.orgId },
-      orderBy: { name: "asc" },
-    });
+    const channels = await prisma.channel.findMany({ where: { orgId: req.orgId }, orderBy: { name: "asc" } });
     res.json(channels);
   });
 
-  // GET /api/channels/:id/messages
   router.get("/:id/messages", async (req, res) => {
     const channel = await prisma.channel.findFirst({ where: { id: req.params.id, orgId: req.orgId } });
     if (!channel) return res.status(404).json({ error: "Channel not found" });
@@ -30,7 +25,6 @@ export default function channelRoutes(io) {
     res.json(messages);
   });
 
-  // POST /api/channels/:id/messages  { text }  -- sender is the authenticated user
   router.post("/:id/messages", async (req, res) => {
     const { text } = req.body;
     if (!text || !text.trim()) return res.status(400).json({ error: "text required" });

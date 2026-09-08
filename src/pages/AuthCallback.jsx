@@ -18,9 +18,5 @@ export default function AuthCallback() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return (
-    <div className="h-screen w-full bg-zinc-950 flex items-center justify-center text-sm text-zinc-500">
-      Signing you in...
-    </div>
-  );
+  return <div className="h-screen w-full bg-zinc-950 flex items-center justify-center text-sm text-zinc-500">Signing you in...</div>;
 }

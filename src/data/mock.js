@@ -1,5 +1,4 @@
-// Column ordering config for the board — the only piece of "mock" data left
-// once tasks/channels/messages are served by the backend.
+// Column ordering config for the board.
 export const columns = [
   { key: "todo", label: "Todo" },
   { key: "in_progress", label: "In Progress" },

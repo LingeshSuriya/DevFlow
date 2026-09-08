@@ -15,7 +15,7 @@ export async function requireAuth(req, res, next) {
     if (!user) return res.status(401).json({ error: "User not found" });
 
     req.user = user;
-    req.membership = user.memberships[0] || null; // single-org MVP: first membership
+    req.membership = user.memberships[0] || null;
     next();
   } catch (e) {
     return res.status(401).json({ error: "Invalid or expired token" });

@@ -4,12 +4,6 @@ import Header from "./Header";
 import { api } from "../api";
 import { useOrg } from "../context/OrgContext";
 
-// PRs / bugs / activity feed have no backend module yet (out of trimmed scope) — static for now.
-const staticStats = [
-  { label: "Open PRs", value: 2, icon: GitPullRequest },
-  { label: "Open bugs", value: 3, icon: Bug },
-];
-
 const activity = [
   { text: "Priya N moved \u201cDiff viewer syntax highlight\u201d to In Progress", time: "5m ago" },
   { text: "Arjun K commented on PR #14", time: "22m ago" },
@@ -19,24 +13,33 @@ const activity = [
 
 export default function Dashboard() {
   const { activeOrg, activeOrgId } = useOrg();
-  const [openTasks, setOpenTasks] = useState(null);
+  const [counts, setCounts] = useState({ tasks: null, bugs: null, prs: null });
 
   useEffect(() => {
     if (!activeOrgId) return;
     let cancelled = false;
-    setOpenTasks(null);
-    api
-      .getTasks()
-      .then((tasks) => !cancelled && setOpenTasks(tasks.filter((t) => t.status !== "done").length))
-      .catch(() => !cancelled && setOpenTasks(0));
+    setCounts({ tasks: null, bugs: null, prs: null });
+
+    Promise.all([api.getTasks(), api.getBugs(), api.getReviews()])
+      .then(([tasks, bugs, reviews]) => {
+        if (cancelled) return;
+        setCounts({
+          tasks: tasks.filter((t) => t.status !== "done").length,
+          bugs: bugs.filter((b) => b.status !== "closed" && b.status !== "fixed").length,
+          prs: reviews.filter((r) => r.status === "open").length,
+        });
+      })
+      .catch(() => !cancelled && setCounts({ tasks: 0, bugs: 0, prs: 0 }));
+
     return () => {
       cancelled = true;
     };
   }, [activeOrgId]);
 
   const stats = [
-    { label: "Open tasks", value: openTasks ?? "…", icon: Columns3 },
-    ...staticStats,
+    { label: "Open tasks", value: counts.tasks ?? "…", icon: Columns3 },
+    { label: "Open PRs", value: counts.prs ?? "…", icon: GitPullRequest },
+    { label: "Open bugs", value: counts.bugs ?? "…", icon: Bug },
   ];
 
   return (
@@ -59,9 +62,7 @@ export default function Dashboard() {
         </div>
 
         <div className="rounded-lg border border-zinc-800 bg-zinc-900">
-          <div className="px-4 py-3 border-b border-zinc-800 text-sm text-zinc-300">
-            Recent activity
-          </div>
+          <div className="px-4 py-3 border-b border-zinc-800 text-sm text-zinc-300">Recent activity</div>
           <ul className="divide-y divide-zinc-800">
             {activity.map((a, i) => (
               <li key={i} className="px-4 py-3 flex items-start gap-2 text-sm">

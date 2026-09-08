@@ -23,16 +23,9 @@ function slugify(name) {
 }
 
 function toPublicUser(user) {
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    initials: user.initials,
-    color: user.color,
-  };
+  return { id: user.id, email: user.email, name: user.name, initials: user.initials, color: user.color };
 }
 
-// POST /api/auth/register  { email, password, name, orgName }
 router.post("/register", async (req, res) => {
   const { email, password, name, orgName } = req.body;
   if (!email || !password || !name || !orgName) {
@@ -70,15 +63,12 @@ router.post("/register", async (req, res) => {
   res.status(201).json({ token, user: toPublicUser(user) });
 });
 
-// POST /api/auth/login  { email, password }
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: "email and password required" });
 
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !user.passwordHash) {
-    return res.status(401).json({ error: "Invalid email or password" });
-  }
+  if (!user || !user.passwordHash) return res.status(401).json({ error: "Invalid email or password" });
 
   const valid = await comparePassword(password, user.passwordHash);
   if (!valid) return res.status(401).json({ error: "Invalid email or password" });
@@ -87,7 +77,6 @@ router.post("/login", async (req, res) => {
   res.json({ token, user: toPublicUser(user) });
 });
 
-// GET /api/auth/github  -> redirects to GitHub's OAuth consent screen
 router.get("/github", (req, res) => {
   if (!GITHUB_CLIENT_ID) {
     return res.status(500).send("GitHub OAuth is not configured (missing GITHUB_CLIENT_ID)");
@@ -100,7 +89,6 @@ router.get("/github", (req, res) => {
   res.redirect(`https://github.com/login/oauth/authorize?${params.toString()}`);
 });
 
-// GET /api/auth/github/callback?code=...
 router.get("/github/callback", async (req, res) => {
   const { code } = req.query;
   if (!code) return res.redirect(`${FRONTEND_URL}/login?error=github_no_code`);
@@ -137,7 +125,6 @@ router.get("/github/callback", async (req, res) => {
 
     let user = await prisma.user.findUnique({ where: { githubId: String(ghUser.id) } });
     if (!user) {
-      // Brand-new GitHub signup: give them their own org, same as email/password signup.
       const orgName = `${name}'s Org`;
       user = await prisma.user.create({
         data: {
@@ -150,13 +137,7 @@ router.get("/github/callback", async (req, res) => {
           memberships: {
             create: {
               role: "OWNER",
-              org: {
-                create: {
-                  name: orgName,
-                  slug: slugify(orgName),
-                  channels: { create: { name: "general" } },
-                },
-              },
+              org: { create: { name: orgName, slug: slugify(orgName), channels: { create: { name: "general" } } } },
             },
           },
         },
@@ -171,7 +152,6 @@ router.get("/github/callback", async (req, res) => {
   }
 });
 
-// GET /api/auth/me
 router.get("/me", requireAuth, (req, res) => {
   res.json(toPublicUser(req.user));
 });

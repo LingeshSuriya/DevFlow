@@ -15,7 +15,6 @@ export default function taskRoutes(io) {
 
   const assigneeInclude = { assignee: { include: { memberships: true } } };
 
-  // GET /api/tasks — only this org's tasks
   router.get("/", async (req, res) => {
     const tasks = await prisma.task.findMany({
       where: { orgId: req.orgId },
@@ -25,17 +24,15 @@ export default function taskRoutes(io) {
     res.json(tasks.map(withRole));
   });
 
-  // GET /api/tasks/:id
   router.get("/:id", async (req, res) => {
     const task = await prisma.task.findFirst({
-      where: { id: req.params.id, orgId: req.orgId }, // orgId check prevents cross-org access by guessing an id
+      where: { id: req.params.id, orgId: req.orgId },
       include: assigneeInclude,
     });
     if (!task) return res.status(404).json({ error: "Task not found" });
     res.json(withRole(task));
   });
 
-  // POST /api/tasks  { title, assigneeId?, points?, description? }
   router.post("/", async (req, res) => {
     const { title, assigneeId, points, description } = req.body;
     if (!title || !title.trim()) return res.status(400).json({ error: "title required" });
@@ -48,13 +45,7 @@ export default function taskRoutes(io) {
     }
 
     const task = await prisma.task.create({
-      data: {
-        orgId: req.orgId,
-        title: title.trim(),
-        assigneeId: assigneeId || null,
-        points: points || 1,
-        description: description || "",
-      },
+      data: { orgId: req.orgId, title: title.trim(), assigneeId: assigneeId || null, points: points || 1, description: description || "" },
       include: assigneeInclude,
     });
 
@@ -63,7 +54,6 @@ export default function taskRoutes(io) {
     res.status(201).json(payload);
   });
 
-  // PATCH /api/tasks/:id  { status?, assigneeId?, description?, title? }
   router.patch("/:id", async (req, res) => {
     const { id } = req.params;
     const { status, assigneeId, description, title } = req.body;
@@ -81,11 +71,7 @@ export default function taskRoutes(io) {
     if (description !== undefined) data.description = description;
     if (title !== undefined && title.trim()) data.title = title.trim();
 
-    const task = await prisma.task.update({
-      where: { id },
-      data,
-      include: assigneeInclude,
-    });
+    const task = await prisma.task.update({ where: { id }, data, include: assigneeInclude });
 
     const payload = withRole(task);
     io.to(`org:${req.orgId}`).emit("task:moved", payload);

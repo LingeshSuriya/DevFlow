@@ -17,7 +17,13 @@ export function disconnectSocket() {
 export function joinOrgRoom(orgId) {
   if (orgId) socket.emit("org:join", orgId);
 }
-
 export function leaveOrgRoom(orgId) {
   if (orgId) socket.emit("org:leave", orgId);
+}
+
+export function joinReviewRoom(reviewId) {
+  if (reviewId) socket.emit("review:join", reviewId);
+}
+export function leaveReviewRoom(reviewId) {
+  if (reviewId) socket.emit("review:leave", reviewId);
 }

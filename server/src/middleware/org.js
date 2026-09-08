@@ -1,4 +1,3 @@
-// Must run after requireAuth (needs req.user.memberships loaded).
 export function requireOrg(req, res, next) {
   const orgId = req.headers["x-org-id"];
   if (!orgId) return res.status(400).json({ error: "Missing X-Org-Id header — no organization selected" });
@@ -11,7 +10,6 @@ export function requireOrg(req, res, next) {
   next();
 }
 
-// Optional role gate, use after requireOrg: requireRole("OWNER", "ADMIN")
 export function requireRole(...allowed) {
   return (req, res, next) => {
     if (!allowed.includes(req.role)) {

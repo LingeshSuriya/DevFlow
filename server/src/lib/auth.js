@@ -20,7 +20,6 @@ export function comparePassword(password, hash) {
   return bcrypt.compare(password, hash);
 }
 
-// Generates unique-ish initials from a display name, e.g. "Arjun K" -> "AK"
 export function initialsFromName(name) {
   const parts = name.trim().split(/\s+/);
   const initials = parts.slice(0, 2).map((p) => p[0]?.toUpperCase() || "").join("");

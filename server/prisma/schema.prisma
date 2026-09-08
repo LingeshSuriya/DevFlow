@@ -19,7 +19,7 @@ enum Role {
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
-  passwordHash String? // null for GitHub-only accounts
+  passwordHash String?
   name         String
   initials     String
   color        String   @default("bg-emerald-500")
@@ -27,9 +27,14 @@ model User {
   githubLogin  String?
   createdAt    DateTime @default(now())
 
-  memberships OrgMember[]
-  tasks       Task[]
-  messages    Message[]
+  memberships   OrgMember[]
+  tasks         Task[]
+  messages      Message[]
+  reportedBugs  Bug[]           @relation("BugReporter")
+  assignedBugs  Bug[]           @relation("BugAssignee")
+  bugComments   BugComment[]
+  pullRequests  PullRequest[]
+  reviewComments ReviewComment[]
 }
 
 model Organization {
@@ -38,9 +43,11 @@ model Organization {
   slug      String   @unique
   createdAt DateTime @default(now())
 
-  members  OrgMember[]
-  tasks    Task[]
-  channels Channel[]
+  members      OrgMember[]
+  tasks        Task[]
+  channels     Channel[]
+  bugs         Bug[]
+  pullRequests PullRequest[]
 }
 
 model OrgMember {
@@ -57,17 +64,19 @@ model OrgMember {
 }
 
 model Task {
-  id          String   @id @default(uuid())
+  id          String       @id @default(uuid())
   org         Organization @relation(fields: [orgId], references: [id])
   orgId       String
   title       String
-  description String   @default("")
-  status      String   @default("todo") // todo | in_progress | review | done
-  points      Int      @default(1)
-  assignee    User?    @relation(fields: [assigneeId], references: [id])
+  description String       @default("")
+  status      String       @default("todo") // todo | in_progress | review | done
+  points      Int          @default(1)
+  assignee    User?        @relation(fields: [assigneeId], references: [id])
   assigneeId  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  bugs Bug[]
 }
 
 model Channel {
@@ -89,4 +98,68 @@ model Message {
   user      User     @relation(fields: [userId], references: [id])
   userId    String
   createdAt DateTime @default(now())
+}
+
+// ---- Module 4: Bug Tracker ----
+model Bug {
+  id                String       @id @default(uuid())
+  org               Organization @relation(fields: [orgId], references: [id])
+  orgId             String
+  title             String
+  description       String       @default("")
+  stepsToReproduce  String       @default("")
+  severity          String       @default("medium") // critical | high | medium | low
+  status            String       @default("open")   // open | in_progress | fixed | closed
+  reporter          User         @relation("BugReporter", fields: [reporterId], references: [id])
+  reporterId        String
+  assignee          User?        @relation("BugAssignee", fields: [assigneeId], references: [id])
+  assigneeId        String?
+  linkedTask        Task?        @relation(fields: [linkedTaskId], references: [id])
+  linkedTaskId      String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  comments BugComment[]
+}
+
+model BugComment {
+  id        String   @id @default(uuid())
+  bug       Bug      @relation(fields: [bugId], references: [id])
+  bugId     String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  text      String
+  createdAt DateTime @default(now())
+}
+
+// ---- Module 3: Real-time Code Review ----
+// Trimmed scope: diff import (public GitHub PRs) + inline comments + review decision.
+// No AI review, no live cursor presence, no breaking-change detector — those are
+// separate, heavier modules and were intentionally left out.
+model PullRequest {
+  id          String       @id @default(uuid())
+  org         Organization @relation(fields: [orgId], references: [id])
+  orgId       String
+  title       String
+  sourceUrl   String       // the github.com/.../pull/N URL that was imported
+  diffText    String       // raw unified diff, fetched once at import time
+  status      String       @default("open") // open | approved | changes_requested | merged
+  author      User         @relation(fields: [authorId], references: [id])
+  authorId    String
+  createdAt   DateTime     @default(now())
+
+  comments ReviewComment[]
+}
+
+model ReviewComment {
+  id          String      @id @default(uuid())
+  pr          PullRequest @relation(fields: [prId], references: [id])
+  prId        String
+  user        User        @relation(fields: [userId], references: [id])
+  userId      String
+  fileName    String      @default("")
+  lineLabel   String      @default("") // e.g. "+42" or "-17", human-readable, not authoritative
+  text        String
+  isDecision  Boolean     @default(false) // true for the "submit review" comment (approve/changes/comment)
+  createdAt   DateTime    @default(now())
 }
