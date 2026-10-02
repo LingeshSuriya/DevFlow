@@ -10,31 +10,17 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Let api.js read the current token without a circular import.
-  useEffect(() => {
-    setTokenGetter(() => token);
-  }, [token]);
+  useEffect(() => { setTokenGetter(() => token); }, [token]);
 
   useEffect(() => {
     if (!token) {
-      setUser(null);
-      setLoading(false);
-      disconnectSocket();
+      setUser(null); setLoading(false); disconnectSocket();
       return;
     }
     setLoading(true);
-    api
-      .me()
-      .then((u) => {
-        setUser(u);
-        connectSocket(token);
-      })
-      .catch(() => {
-        // token expired/invalid
-        localStorage.removeItem(STORAGE_KEY);
-        setToken(null);
-        setUser(null);
-      })
+    api.me()
+      .then((u) => { setUser(u); connectSocket(token); })
+      .catch(() => { localStorage.removeItem(STORAGE_KEY); setToken(null); setUser(null); })
       .finally(() => setLoading(false));
   }, [token]);
 
@@ -59,9 +45,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
-    setToken(null);
-    setUser(null);
-    disconnectSocket();
+    setToken(null); setUser(null); disconnectSocket();
   }, []);
 
   return (

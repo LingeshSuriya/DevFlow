@@ -38,37 +38,21 @@ export default function Register() {
         <Field label="Password" value={password} onChange={setPassword} type="password" />
         <Field label="Organization name" value={orgName} onChange={setOrgName} />
         <p className="text-[11px] text-zinc-600">
-          You become <span className="text-emerald-400">Owner</span> of this new org. You can join
-          other orgs later if someone invites you by email.
+          You become <span className="text-emerald-400">Owner</span> of this new org.
         </p>
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-zinc-950 text-sm font-medium py-2 rounded-md transition-colors"
-        >
+        <button type="submit" disabled={submitting} className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-zinc-950 text-sm font-medium py-2 rounded-md transition-colors">
           {submitting ? "Creating account..." : "Create account"}
         </button>
       </form>
-
       <div className="flex items-center gap-3 my-4">
         <div className="h-px flex-1 bg-zinc-800" />
         <span className="text-[11px] text-zinc-600">or</span>
         <div className="h-px flex-1 bg-zinc-800" />
       </div>
-
-      <a
-        href={api.githubLoginUrl()}
-        className="w-full flex items-center justify-center gap-2 border border-zinc-800 hover:border-zinc-700 text-sm text-zinc-200 py-2 rounded-md transition-colors"
-      >
+      <a href={api.githubLoginUrl()} className="w-full flex items-center justify-center gap-2 border border-zinc-800 hover:border-zinc-700 text-sm text-zinc-200 py-2 rounded-md transition-colors">
         <Github size={16} /> Continue with GitHub
       </a>
-      <p className="text-[11px] text-zinc-600 text-center mt-2">
-        GitHub signups also get their own new org automatically.
-      </p>
-
-      <p className="text-xs text-zinc-500 text-center mt-4">
-        Already have an account? <Link to="/login" className="text-emerald-400 hover:underline">Sign in</Link>
-      </p>
+      <p className="text-xs text-zinc-500 text-center mt-4">Already have an account? <Link to="/login" className="text-emerald-400 hover:underline">Sign in</Link></p>
     </AuthShell>
   );
 }

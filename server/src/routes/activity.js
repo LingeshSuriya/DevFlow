@@ -6,14 +6,9 @@ import { requireOrg } from "../middleware/org.js";
 const router = Router();
 router.use(requireAuth, requireOrg);
 
-// GET /api/activity?limit=20
 router.get("/", async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
-  const entries = await prisma.activityLog.findMany({
-    where: { orgId: req.orgId },
-    orderBy: { createdAt: "desc" },
-    take: limit,
-  });
+  const entries = await prisma.activityLog.findMany({ where: { orgId: req.orgId }, orderBy: { createdAt: "desc" }, take: limit });
   res.json(entries);
 });
 

@@ -6,7 +6,6 @@ export const ROLES = {
   PENTESTER: { label: "Pentester", badge: "bg-rose-500/15 text-rose-400 border-rose-500/30" },
   VIEWER: { label: "Viewer", badge: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30" },
 };
-
 export function roleMeta(role) {
   return ROLES[role] || { label: role || "Unknown", badge: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30" };
 }

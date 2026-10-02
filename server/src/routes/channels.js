@@ -2,47 +2,35 @@ import { Router } from "express";
 import { prisma } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { requireOrg } from "../middleware/org.js";
+import { requirePermission } from "../middleware/permission.js";
 
 export default function channelRoutes(io) {
   const router = Router();
   router.use(requireAuth, requireOrg);
 
-  // GET /api/channels — only this org's channels
   router.get("/", async (req, res) => {
-    const channels = await prisma.channel.findMany({
-      where: { orgId: req.orgId },
-      orderBy: { name: "asc" },
-    });
+    const channels = await prisma.channel.findMany({ where: { orgId: req.orgId }, orderBy: { name: "asc" } });
     res.json(channels);
   });
 
-  // GET /api/channels/:id/messages
   router.get("/:id/messages", async (req, res) => {
     const channel = await prisma.channel.findFirst({ where: { id: req.params.id, orgId: req.orgId } });
     if (!channel) return res.status(404).json({ error: "Channel not found" });
 
     const messages = await prisma.message.findMany({
-      where: { channelId: channel.id },
-      include: { user: true },
-      orderBy: { createdAt: "asc" },
-      take: 100,
+      where: { channelId: channel.id }, include: { user: true }, orderBy: { createdAt: "asc" }, take: 100,
     });
     res.json(messages);
   });
 
-  // POST /api/channels/:id/messages  { text }  -- sender is the authenticated user
-  router.post("/:id/messages", async (req, res) => {
+  router.post("/:id/messages", requirePermission("SEND_CHAT"), async (req, res) => {
     const { text } = req.body;
     if (!text || !text.trim()) return res.status(400).json({ error: "text required" });
 
     const channel = await prisma.channel.findFirst({ where: { id: req.params.id, orgId: req.orgId } });
     if (!channel) return res.status(404).json({ error: "Channel not found" });
 
-    const message = await prisma.message.create({
-      data: { text: text.trim(), channelId: channel.id, userId: req.user.id },
-      include: { user: true },
-    });
-
+    const message = await prisma.message.create({ data: { text: text.trim(), channelId: channel.id, userId: req.user.id }, include: { user: true } });
     io.to(`channel:${channel.id}`).emit("message:new", message);
     res.status(201).json(message);
   });
